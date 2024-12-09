@@ -1,0 +1,79 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const { Pool } = require('pg'); // For PostgreSQL connection
+
+const app = express();
+const port = process.env.PORT || 3001;
+
+app.use(bodyParser.json());
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+});
+
+// Database connection
+const pool = new Pool({
+    user: 'your_db_user',
+    host: 'localhost',
+    database: 'your_database',
+    password: 'your_db_password',
+    port: 5432,
+});
+
+// Get all products
+app.get('/api/products', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM Products');
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Add new product
+app.post('/api/products', async (req, res) => {
+    const { ProductName, StockLevel, ReorderLevel } = req.body;
+    try {
+        const newProduct = await pool.query(
+            'INSERT INTO Products (ProductName, StockLevel, ReorderLevel) VALUES ($1, $2, $3) RETURNING *',
+            [ProductName, StockLevel, ReorderLevel]
+        );
+        res.status(201).json(newProduct.rows[0]);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Update stock level
+app.put('/api/products/:id', async (req, res) => {
+    const productId = req.params.id;
+    const { StockLevel } = req.body;
+    try {
+        const result = await pool.query(
+            'UPDATE Products SET StockLevel = $1 WHERE ProductID = $2 RETURNING *',
+            [StockLevel, productId]
+        );
+        if (result.rows.length === 0) return res.status(404).send('Product not found');
+        res.json(result.rows[0]);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Delete product
+app.delete('/api/products/:id', async (req, res) => {
+    const productId = req.params.id;
+    try {
+        const result = await pool.query('DELETE FROM Products WHERE ProductID = $1', [productId]);
+        if (result.rowCount === 0) return res.status(404).send('Product not found');
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+});
