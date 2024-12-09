@@ -1,0 +1,6 @@
+// Implement APIs for Stock Management
+
+mkdir inventory-management
+cd inventory-management
+npm init -y
+npm install express body-parser cors pg
