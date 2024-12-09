@@ -1,0 +1,11 @@
+//creating the database with SQL
+
+CREATE TABLE Products (
+    ProductID SERIAL PRIMARY KEY,
+    ProductName VARCHAR(255) NOT NULL,
+    StockLevel INT NOT NULL,
+    ReorderLevel INT NOT NULL CHECK (ReorderLevel >= 0),
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
