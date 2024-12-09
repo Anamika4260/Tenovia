@@ -4,3 +4,10 @@ npx create-react-app inventory-frontend
 cd inventory-frontend
 npm install axios
 
+//Create a component to manage inventory.
+// src/components/Inventory.js
+import React, { useEffect, useState }
+
+
+
+
